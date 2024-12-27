@@ -1,0 +1,17 @@
+[tool.cibuildwheel]
+skip = ["cp36-*"]
+
+[tool.cibuildwheel.platforms]
+
+[tool.cibuildwheel.linux]
+archs = ["auto64"]
+
+[tool.cibuildwheel.macos]
+archs = ["auto64"]
+
+[tool.cibuildwheel.windows]
+archs = ["auto64"]
+
+
+[project]
+requires-python = ">=3.7"
