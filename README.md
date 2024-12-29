@@ -1,6 +1,6 @@
 # phashmap - A Vectorized Python Dict/Set
 
-phashmap is a copy of GetPy, to provide the highest performance python dict/set that integrates into the python scientific ecosystem for Linux and Windows.
+phashmap is a copy of GetPy(https://github.com/atom-moyer/getpy), to provide the highest performance python dict/set that integrates into the python scientific ecosystem for Linux and Windows.
 
 ## Installation
 `pip install phashmap`
