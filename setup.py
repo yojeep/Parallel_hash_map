@@ -13,12 +13,10 @@ with open("README.md", "r") as readme_file:
 extra_compile_args_dict = {
     'linux' : ['-w', '-std=c++17'],
     'linux2' : ['-w', '-std=c++17'],
-    'darwin' : ['-w', '-std=c++17', '-stdlib=libc++'],
-    'win32' : ['-w', '/std:c++17','/Ox','/openmp','/GL','/MP','/MT'],
+    'darwin' : ['-w', '-std=c++17', '-stdlib=libc++','-O3','-openmp','-j64'],
+    'win32' : ['/w', '/std:c++17','/Ox','/openmp','/GL','/MP','/MT'],
 
 }
-
-
 
 
 

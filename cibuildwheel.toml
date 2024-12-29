@@ -1,7 +1,6 @@
 [tool.cibuildwheel]
-skip = ["cp36-*"]
+skip = ["cp36-*",'pp*']
 
-[tool.cibuildwheel.platforms]
 
 [tool.cibuildwheel.linux]
 archs = ["auto64"]
