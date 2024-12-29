@@ -1,11 +1,11 @@
-# GetPy - A Vectorized Python Dict/Set
+# phashmap - A Vectorized Python Dict/Set
 
-The goal of GetPy is to provide the highest performance python dict/set that integrates into the python scientific ecosystem.
+phashmap is a copy of GetPy(https://github.com/atom-moyer/getpy), to provide the highest performance python dict/set that integrates into the python scientific ecosystem for Linux and Windows.
 
 ## Installation
-`pip install getpy`
+`pip install phashmap`
 
-Note only a linux build is currently distributed. If you would like to build the package from source you can clone the repo and run `python setup.py install`. Compilation will require 16gb of ram. I am working on getting that down.
+Linux and Windows build is currently distributed. If you would like to build the package from source you can clone the repo and run `python setup.py install`. Compilation will require 16gb of ram. I am working on getting that down.
 
 ## About
 GetPy is a thin binding to the Parallel Hashmap (https://github.com/greg7mdp/parallel-hashmap.git) which is the current state of the art unordered map/set with minimal memory overhead and fast runtime speed. The binding layer is supported by PyBind11 (https://github.com/pybind/pybind11.git) which is fast to compile and simple to extend.
