@@ -9,4 +9,6 @@
     #define THIS_EXTRA_TPL_PARAMS , 4, boost::upgrade_mutex
 #endif
 
-#include "flat_hash_map_test.cc"
+#define THIS_EXTRA_TPL_PARAMS_NULLMUTEX , 4, phmap::NullMutex
+
+#include "parallel_hash_map_test.cc"

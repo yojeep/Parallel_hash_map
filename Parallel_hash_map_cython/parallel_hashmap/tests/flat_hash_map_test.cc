@@ -15,10 +15,15 @@
 #ifndef THIS_HASH_MAP
     #define THIS_HASH_MAP   flat_hash_map
     #define THIS_TEST_NAME  FlatHashMap
+    #define ORIG_FLAT_HASH_MAP 1
 #endif
 
 #ifndef THIS_EXTRA_TPL_PARAMS
     #define THIS_EXTRA_TPL_PARAMS 
+#endif
+
+#ifndef THIS_EXTRA_TPL_PARAMS_NULLMUTEX
+    #define THIS_EXTRA_TPL_PARAMS_NULLMUTEX 
 #endif
 
 #include "parallel_hashmap/phmap.h"
@@ -43,10 +48,10 @@
 #endif
 
 namespace phmap {
-namespace container_internal {
+namespace priv {
 namespace {
-using ::phmap::container_internal::hash_internal::Enum;
-using ::phmap::container_internal::hash_internal::EnumClass;
+using ::phmap::priv::hash_internal::Enum;
+using ::phmap::priv::hash_internal::EnumClass;
 using ::testing::_;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
@@ -56,11 +61,17 @@ using Map = THIS_HASH_MAP<K, V, StatefulTestingHash, StatefulTestingEqual,
                           Alloc<std::pair<const K, V>> THIS_EXTRA_TPL_PARAMS>;
 
 
-template <class K, class V, class H = phmap::container_internal::hash_default_hash<K>,
-          class Eq = phmap::container_internal::hash_default_eq<K>,
-          class Alloc =  phmap::container_internal::Allocator<
-              phmap::container_internal::Pair<const K, V>>>
+template <class K, class V, class H = phmap::priv::hash_default_hash<K>,
+          class Eq = phmap::priv::hash_default_eq<K>,
+          class Alloc =  phmap::priv::Allocator<
+              phmap::priv::Pair<const K, V>>>
 using ThisMap = THIS_HASH_MAP<K, V, H, Eq, Alloc THIS_EXTRA_TPL_PARAMS>;
+    
+template <class K, class V, class H = phmap::priv::hash_default_hash<K>,
+          class Eq = phmap::priv::hash_default_eq<K>,
+          class Alloc =  phmap::priv::Allocator<
+              phmap::priv::Pair<const K, V>>>
+using ThisMap_NullMutex = THIS_HASH_MAP<K, V, H, Eq, Alloc THIS_EXTRA_TPL_PARAMS_NULLMUTEX>;
 
 static_assert(!std::is_standard_layout<NonStandardLayout>(), "");
 
@@ -198,14 +209,16 @@ TEST(THIS_TEST_NAME, LazyKeyPattern) {
   m.try_emplace(LazyInt(2, &conversions), 3);
   EXPECT_THAT(m, UnorderedElementsAre(Pair(1, 2), Pair(2, 3)));
   EXPECT_EQ(conversions, 2);
-#ifdef NDEBUG
+#if defined(NDEBUG) && ORIG_FLAT_HASH_MAP
+  // for parallel maps, the reserve(3) above is not sufficient to guarantee that a submap will not resize and therefore rehash
   EXPECT_EQ(hashes, 3);
 #endif
 
   m.try_emplace(LazyInt(2, &conversions), 4);
   EXPECT_THAT(m, UnorderedElementsAre(Pair(1, 2), Pair(2, 3)));
   EXPECT_EQ(conversions, 2);
-#ifdef NDEBUG
+#if defined(NDEBUG) && ORIG_FLAT_HASH_MAP
+  // for parallel maps, the reserve(3) above is not sufficient to guarantee that a submap will not resize and therefore rehash
   EXPECT_EQ(hashes, 4);
 #endif
 }
@@ -244,7 +257,8 @@ TEST(THIS_TEST_NAME, MergeExtractInsert) {
   m.insert(std::move(node));
   EXPECT_THAT(m, UnorderedElementsAre(Pair(1, 17), Pair(2, 9)));
 }
-#if !defined(__ANDROID__) && !defined(__APPLE__) && !defined(__EMSCRIPTEN__) && defined(PHMAP_HAVE_STD_ANY)
+
+#if 0 && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(__EMSCRIPTEN__) && defined(PHMAP_HAVE_STD_ANY)
 TEST(THIS_TEST_NAME, Any) {
   ThisMap<int, std::any> m;
   m.emplace(1, 7);
@@ -278,5 +292,5 @@ TEST(THIS_TEST_NAME, Any) {
 #endif  // __ANDROID__
 
 }  // namespace
-}  // namespace container_internal
+}  // namespace priv
 }  // namespace phmap

@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PHMAP_CONTAINER_INTERNAL_UNORDERED_MAP_MODIFIERS_TEST_H_
-#define PHMAP_CONTAINER_INTERNAL_UNORDERED_MAP_MODIFIERS_TEST_H_
+#ifndef PHMAP_PRIV_UNORDERED_MAP_MODIFIERS_TEST_H_
+#define PHMAP_PRIV_UNORDERED_MAP_MODIFIERS_TEST_H_
+
+#ifdef _MSC_VER
+    #pragma warning(push, 0) 
+#endif
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "hash_generator_testing.h"
 #include "hash_policy_testing.h"
 
+#ifdef _MSC_VER
+    #pragma warning(pop) 
+#endif
+
 namespace phmap {
-namespace container_internal {
+namespace priv {
 
 template <class UnordMap>
 class ModifiersTest : public ::testing::Test {};
@@ -267,7 +275,7 @@ REGISTER_TYPED_TEST_SUITE_P(ModifiersTest, Clear, Insert, InsertHint,
                             Emplace, EmplaceHint, TryEmplace, TryEmplaceHint,
                             Erase, EraseRange, EraseKey, Swap);
 
-}  // namespace container_internal
+}  // namespace priv
 }  // namespace phmap
 
-#endif  // PHMAP_CONTAINER_INTERNAL_UNORDERED_MAP_MODIFIERS_TEST_H_
+#endif  // PHMAP_PRIV_UNORDERED_MAP_MODIFIERS_TEST_H_

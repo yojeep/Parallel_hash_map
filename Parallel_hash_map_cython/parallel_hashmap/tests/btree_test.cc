@@ -34,23 +34,27 @@
 #include <numeric>
 #include "btree_test.h"
 
+#ifdef _MSC_VER
+    #pragma warning(disable: 4244 4100 4389)
+#endif
+
 namespace phmap {
     namespace test_internal {
-        int BaseCountedInstance::num_instances_ = 0;
-        int BaseCountedInstance::num_live_instances_ = 0;
-        int BaseCountedInstance::num_moves_ = 0;
-        int BaseCountedInstance::num_copies_ = 0;
-        int BaseCountedInstance::num_swaps_ = 0;
-        int BaseCountedInstance::num_comparisons_ = 0;
+        size_t BaseCountedInstance::num_instances_ = 0;
+        size_t BaseCountedInstance::num_live_instances_ = 0;
+        size_t BaseCountedInstance::num_moves_ = 0;
+        size_t BaseCountedInstance::num_copies_ = 0;
+        size_t BaseCountedInstance::num_swaps_ = 0;
+        size_t BaseCountedInstance::num_comparisons_ = 0;
 
     }  // namespace test_internal
-}  // namespace phmap\
+}  // namespace phmap
 
 
 static const size_t test_values = 10000;
 
 namespace phmap {
-namespace container_internal {
+namespace priv {
 namespace {
 
     using ::phmap::test_internal::CopyableMovableInstance;
@@ -206,8 +210,8 @@ public:
     }
 
     int erase(const key_type &key) {
-        int size = tree_.size();
-        int res = checker_.erase(key);
+        size_t size = tree_.size();
+        int res = (int)checker_.erase(key);
         EXPECT_EQ(res, tree_.count(key));
         EXPECT_EQ(res, tree_.erase(key));
         EXPECT_EQ(tree_.count(key), 0);
@@ -217,8 +221,8 @@ public:
     }
     iterator erase(iterator iter) {
         key_type key = iter.key();
-        int size = tree_.size();
-        int count = tree_.count(key);
+        size_t size = tree_.size();
+        size_t count = tree_.count(key);
         auto checker_iter = checker_.lower_bound(key);
         for (iterator tmp(tree_.lower_bound(key)); tmp != iter; ++tmp) {
             ++checker_iter;
@@ -227,7 +231,7 @@ public:
         ++checker_next;
         checker_.erase(checker_iter);
         iter = tree_.erase(iter);
-        EXPECT_EQ(tree_.size(), checker_.size());
+        EXPECT_EQ(tree_.size(), (size_t)checker_.size());
         EXPECT_EQ(tree_.size(), size - 1);
         EXPECT_EQ(tree_.count(key), count - 1);
         if (count == 1) {
@@ -237,7 +241,7 @@ public:
     }
 
     void erase(iterator begin, iterator end) {
-        int size = tree_.size();
+        size_t size = tree_.size();
         int count = std::distance(begin, end);
         auto checker_begin = checker_.lower_bound(begin.key());
         for (iterator tmp(tree_.lower_bound(begin.key())); tmp != begin; ++tmp) {
@@ -277,7 +281,7 @@ public:
         }
 
         // Move through the forward iterators using decrement.
-        for (int n = tree_.size() - 1; n >= 0; --n) {
+        for (int n = (int)tree_.size() - 1; n >= 0; --n) {
             iter_check(tree_iter, checker_iter);
             --tree_iter;
             --checker_iter;
@@ -293,7 +297,7 @@ public:
         }
 
         // Move through the reverse iterators using decrement.
-        for (int n = tree_.size() - 1; n >= 0; --n) {
+        for (int n = (int)tree_.size() - 1; n >= 0; --n) {
             riter_check(tree_riter, checker_riter);
             --tree_riter;
             --checker_riter;
@@ -340,7 +344,7 @@ namespace {
 
         // Insertion routines.
         std::pair<iterator, bool> insert(const value_type &x) {
-            int size = this->tree_.size();
+            size_t size = this->tree_.size();
             std::pair<typename CheckerType::iterator, bool> checker_res =
                 this->checker_.insert(x);
             std::pair<iterator, bool> tree_res = this->tree_.insert(x);
@@ -351,7 +355,7 @@ namespace {
             return tree_res;
         }
         iterator insert(iterator position, const value_type &x) {
-            int size = this->tree_.size();
+            size_t size = this->tree_.size();
             std::pair<typename CheckerType::iterator, bool> checker_res =
                 this->checker_.insert(x);
             iterator tree_res = this->tree_.insert(position, x);
@@ -388,7 +392,7 @@ namespace {
 
         // Insertion routines.
         iterator insert(const value_type &x) {
-            int size = this->tree_.size();
+            size_t size = this->tree_.size();
             auto checker_res = this->checker_.insert(x);
             iterator tree_res = this->tree_.insert(x);
             CheckPairEquals(*tree_res, *checker_res);
@@ -397,7 +401,7 @@ namespace {
             return tree_res;
         }
         iterator insert(iterator position, const value_type &x) {
-            int size = this->tree_.size();
+            size_t size = this->tree_.size();
             auto checker_res = this->checker_.insert(x);
             iterator tree_res = this->tree_.insert(position, x);
             CheckPairEquals(*tree_res, *checker_res);
@@ -414,14 +418,14 @@ namespace {
     };
 
     template <typename T, typename V>
-    void DoTest(const char *name, T *b, const std::vector<V> &values) {
+    void DoTest(const char *, T *b, const std::vector<V> &values) {
         typename KeyOfValue<typename T::key_type, V>::type key_of_value;
 
         T &mutable_b = *b;
         const T &const_b = *b;
 
         // Test insert.
-        for (int i = 0; i < values.size(); ++i) {
+        for (size_t i = 0; i < values.size(); ++i) {
             mutable_b.insert(values[i]);
             mutable_b.value_check(values[i]);
         }
@@ -432,14 +436,14 @@ namespace {
         // Test copy constructor.
         T b_copy(const_b);
         EXPECT_EQ(b_copy.size(), const_b.size());
-        for (int i = 0; i < values.size(); ++i) {
+        for (size_t i = 0; i < values.size(); ++i) {
             CheckPairEquals(*b_copy.find(key_of_value(values[i])), values[i]);
         }
 
         // Test range constructor.
         T b_range(const_b.begin(), const_b.end());
         EXPECT_EQ(b_range.size(), const_b.size());
-        for (int i = 0; i < values.size(); ++i) {
+        for (size_t i = 0; i < values.size(); ++i) {
             CheckPairEquals(*b_range.find(key_of_value(values[i])), values[i]);
         }
 
@@ -451,7 +455,7 @@ namespace {
         b_range.clear();
         b_range.insert(b_copy.begin(), b_copy.end());
         EXPECT_EQ(b_range.size(), b_copy.size());
-        for (int i = 0; i < values.size(); ++i) {
+        for (size_t i = 0; i < values.size(); ++i) {
             CheckPairEquals(*b_range.find(key_of_value(values[i])), values[i]);
         }
 
@@ -469,7 +473,7 @@ namespace {
         b_range.swap(b_copy);
         EXPECT_EQ(b_copy.size(), 0);
         EXPECT_EQ(b_range.size(), const_b.size());
-        for (int i = 0; i < values.size(); ++i) {
+        for (size_t i = 0; i < values.size(); ++i) {
             CheckPairEquals(*b_range.find(key_of_value(values[i])), values[i]);
         }
         b_range.swap(b_copy);
@@ -478,13 +482,13 @@ namespace {
         swap(b_range, b_copy);
         EXPECT_EQ(b_copy.size(), 0);
         EXPECT_EQ(b_range.size(), const_b.size());
-        for (int i = 0; i < values.size(); ++i) {
+        for (size_t i = 0; i < values.size(); ++i) {
             CheckPairEquals(*b_range.find(key_of_value(values[i])), values[i]);
         }
         swap(b_range, b_copy);
 
         // Test erase via values.
-        for (int i = 0; i < values.size(); ++i) {
+        for (size_t i = 0; i < values.size(); ++i) {
             mutable_b.erase(key_of_value(values[i]));
             // Erasing a non-existent key should have no effect.
             ASSERT_EQ(mutable_b.erase(key_of_value(values[i])), 0);
@@ -495,7 +499,7 @@ namespace {
 
         // Test erase via iterators.
         mutable_b = b_copy;
-        for (int i = 0; i < values.size(); ++i) {
+        for (size_t i = 0; i < values.size(); ++i) {
             mutable_b.erase(mutable_b.find(key_of_value(values[i])));
         }
 
@@ -503,7 +507,7 @@ namespace {
         EXPECT_EQ(const_b.size(), 0);
 
         // Test insert with hint.
-        for (int i = 0; i < values.size(); i++) {
+        for (size_t i = 0; i < values.size(); i++) {
             mutable_b.insert(mutable_b.upper_bound(key_of_value(values[i])), values[i]);
         }
 
@@ -517,7 +521,7 @@ namespace {
         // First half.
         mutable_b = b_copy;
         typename T::iterator mutable_iter_end = mutable_b.begin();
-        for (int i = 0; i < values.size() / 2; ++i) ++mutable_iter_end;
+        for (size_t i = 0; i < values.size() / 2; ++i) ++mutable_iter_end;
         mutable_b.erase(mutable_b.begin(), mutable_iter_end);
         EXPECT_EQ(mutable_b.size(), values.size() - values.size() / 2);
         const_b.verify();
@@ -525,7 +529,7 @@ namespace {
         // Second half.
         mutable_b = b_copy;
         typename T::iterator mutable_iter_begin = mutable_b.begin();
-        for (int i = 0; i < values.size() / 2; ++i) ++mutable_iter_begin;
+        for (size_t i = 0; i < values.size() / 2; ++i) ++mutable_iter_begin;
         mutable_b.erase(mutable_iter_begin, mutable_b.end());
         EXPECT_EQ(mutable_b.size(), values.size() / 2);
         const_b.verify();
@@ -533,9 +537,9 @@ namespace {
         // Second quarter.
         mutable_b = b_copy;
         mutable_iter_begin = mutable_b.begin();
-        for (int i = 0; i < values.size() / 4; ++i) ++mutable_iter_begin;
+        for (size_t i = 0; i < values.size() / 4; ++i) ++mutable_iter_begin;
         mutable_iter_end = mutable_iter_begin;
-        for (int i = 0; i < values.size() / 4; ++i) ++mutable_iter_end;
+        for (size_t i = 0; i < values.size() / 4; ++i) ++mutable_iter_end;
         mutable_b.erase(mutable_iter_begin, mutable_iter_end);
         EXPECT_EQ(mutable_b.size(), values.size() - values.size() / 4);
         const_b.verify();
@@ -602,7 +606,7 @@ namespace {
         using V = typename remove_pair_const<typename T::value_type>::type;
         const std::vector<V> random_values = GenerateValuesWithSeed<V>(
             test_values, 4 * test_values,
-            testing::GTEST_FLAG(random_seed));
+            GTEST_FLAG_GET(random_seed));
 
         unique_checker<T, C> container;
 
@@ -626,7 +630,7 @@ namespace {
         using V = typename remove_pair_const<typename T::value_type>::type;
         const std::vector<V> random_values = GenerateValuesWithSeed<V>(
             test_values, 4 * test_values,
-            testing::GTEST_FLAG(random_seed));
+            GTEST_FLAG_GET(random_seed));
 
         multi_checker<T, C> container;
 
@@ -795,9 +799,6 @@ namespace {
 
     template <typename K, int N = 256>
     void SetTest() {
-        EXPECT_EQ(
-            sizeof(phmap::btree_set<K>),
-            2 * sizeof(void *) + sizeof(typename phmap::btree_set<K>::size_type));
         using BtreeSet = phmap::btree_set<K>;
         using CountingBtreeSet =
             phmap::btree_set<K, std::less<K>, PropagatingCountingAlloc<K>>;
@@ -807,9 +808,6 @@ namespace {
 
     template <typename K, int N = 256>
     void MapTest() {
-        EXPECT_EQ(
-            sizeof(phmap::btree_map<K, K>),
-            2 * sizeof(void *) + sizeof(typename phmap::btree_map<K, K>::size_type));
         using BtreeMap = phmap::btree_map<K, K>;
         using CountingBtreeMap =
             phmap::btree_map<K, K, std::less<K>,
@@ -830,9 +828,6 @@ namespace {
 
     template <typename K, int N = 256>
     void MultiSetTest() {
-        EXPECT_EQ(
-            sizeof(phmap::btree_multiset<K>),
-            2 * sizeof(void *) + sizeof(typename phmap::btree_multiset<K>::size_type));
         using BtreeMSet = phmap::btree_multiset<K>;
         using CountingBtreeMSet =
             phmap::btree_multiset<K, std::less<K>, PropagatingCountingAlloc<K>>;
@@ -842,9 +837,6 @@ namespace {
 
     template <typename K, int N = 256>
     void MultiMapTest() {
-        EXPECT_EQ(sizeof(phmap::btree_multimap<K, K>),
-                  2 * sizeof(void *) +
-                  sizeof(typename phmap::btree_multimap<K, K>::size_type));
         using BtreeMMap = phmap::btree_multimap<K, K>;
         using CountingBtreeMMap =
             phmap::btree_multimap<K, K, std::less<K>,
@@ -1269,7 +1261,7 @@ namespace {
                       "key_compare_to_adapter should have adapted this comparator.");
         static_assert(
             std::is_same<phmap::weak_ordering,
-            phmap::result_of_t<Adapted(const K &, const K &)>>::value,
+            phmap::invoke_result_t<Adapted, const K &, const K &>>::value,
             "Adapted comparator should be a key-compare-to comparator.");
     }
     template <typename Compare, typename K>
@@ -1280,7 +1272,7 @@ namespace {
             "key_compare_to_adapter shouldn't have adapted this comparator.");
         static_assert(
             std::is_same<bool,
-            phmap::result_of_t<Unadapted(const K &, const K &)>>::value,
+            phmap::invoke_result_t<Unadapted, const K &, const K &>>::value,
             "Un-adapted comparator should return bool.");
     }
 
@@ -1858,7 +1850,7 @@ namespace {
             while (s.size() < kSize) {
                 s.insert(MovableOnlyInstance(s.size()));
             }
-            for (int i = 0; i < kSize; ++i) {
+            for (size_t i = 0; i < kSize; ++i) {
                 // Extract with key
                 auto nh = s.extract(MovableOnlyInstance(i));
                 EXPECT_EQ(s.size(), kSize - 1);
@@ -1891,7 +1883,7 @@ namespace {
                 m.insert(
                     {CopyableMovableInstance(m.size()), MovableOnlyInstance(m.size())});
             }
-            for (int i = 0; i < kSize; ++i) {
+            for (size_t i = 0; i < kSize; ++i) {
                 // Extract with key
                 auto nh = m.extract(CopyableMovableInstance(i));
                 EXPECT_EQ(m.size(), kSize - 1);
@@ -2368,5 +2360,5 @@ namespace {
     }
 
 }  // namespace
-}  // namespace container_internal
+}  // namespace priv
 }  // namespace phmap

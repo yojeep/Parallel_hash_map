@@ -5,7 +5,7 @@ import sys
 import setuptools
 import glob
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
@@ -22,7 +22,7 @@ extra_compile_args_dict = {
 
 ext_modules = [
   Extension(
-    "_getpy",
+    "_phashmap",
     glob.glob('src/*.cpp'),
     include_dirs = ['lib/parallel_hashmap', 'lib/pybind11/include'],
     language = 'c++',

@@ -42,7 +42,7 @@
 #include "gtest/gtest.h"
 
 namespace phmap {
-namespace container_internal {
+namespace priv {
 
 struct RawHashSetTestOnlyAccess {
   template <typename C>
@@ -138,31 +138,31 @@ TEST(BitMask, WithShift) {
   EXPECT_EQ(0x0000000080800000, mask);
 
   BitMask<uint64_t, 8, 3> b(mask);
-  EXPECT_EQ(*b, 2);
+  EXPECT_EQ(*b, 2u);
 }
 
 TEST(BitMask, LeadingTrailing) {
-  EXPECT_EQ((BitMask<uint32_t, 16>(0x00001a40).LeadingZeros()), 3);
-  EXPECT_EQ((BitMask<uint32_t, 16>(0x00001a40).TrailingZeros()), 6);
+  EXPECT_EQ((BitMask<uint32_t, 16>(0x00001a40).LeadingZeros()), 3u);
+  EXPECT_EQ((BitMask<uint32_t, 16>(0x00001a40).TrailingZeros()), 6u);
 
-  EXPECT_EQ((BitMask<uint32_t, 16>(0x00000001).LeadingZeros()), 15);
-  EXPECT_EQ((BitMask<uint32_t, 16>(0x00000001).TrailingZeros()), 0);
+  EXPECT_EQ((BitMask<uint32_t, 16>(0x00000001).LeadingZeros()), 15u);
+  EXPECT_EQ((BitMask<uint32_t, 16>(0x00000001).TrailingZeros()), 0u);
 
-  EXPECT_EQ((BitMask<uint32_t, 16>(0x00008000).LeadingZeros()), 0);
-  EXPECT_EQ((BitMask<uint32_t, 16>(0x00008000).TrailingZeros()), 15);
+  EXPECT_EQ((BitMask<uint32_t, 16>(0x00008000).LeadingZeros()), 0u);
+  EXPECT_EQ((BitMask<uint32_t, 16>(0x00008000).TrailingZeros()), 15u);
 
-  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x0000008080808000).LeadingZeros()), 3);
-  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x0000008080808000).TrailingZeros()), 1);
+  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x0000008080808000).LeadingZeros()), 3u);
+  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x0000008080808000).TrailingZeros()), 1u);
 
-  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x0000000000000080).LeadingZeros()), 7);
-  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x0000000000000080).TrailingZeros()), 0);
+  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x0000000000000080).LeadingZeros()), 7u);
+  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x0000000000000080).TrailingZeros()), 0u);
 
-  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x8000000000000000).LeadingZeros()), 0);
-  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x8000000000000000).TrailingZeros()), 7);
+  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x8000000000000000).LeadingZeros()), 0u);
+  EXPECT_EQ((BitMask<uint64_t, 8, 3>(0x8000000000000000).TrailingZeros()), 7u);
 }
 
 TEST(Group, EmptyGroup) {
-  for (h2_t h = 0; h != 128; ++h) EXPECT_FALSE(Group{EmptyGroup()}.Match(h));
+   for (h2_t h = 0; h != 128; ++h) EXPECT_FALSE(Group{EmptyGroup<std::true_type>()}.Match(h));
 }
 
 TEST(Group, Match) {
@@ -212,7 +212,7 @@ TEST(Group, MatchEmptyOrDeleted) {
 
 TEST(Batch, DropDeletes) {
   constexpr size_t kCapacity = 63;
-  constexpr size_t kGroupWidth = container_internal::Group::kWidth;
+  constexpr size_t kGroupWidth = priv::Group::kWidth;
   std::vector<ctrl_t> ctrl(kCapacity + 1 + kGroupWidth);
   ctrl[kCapacity] = kSentinel;
   std::vector<ctrl_t> pattern = {kEmpty, 2, kDeleted, 2, kEmpty, 1, kDeleted};
@@ -259,6 +259,7 @@ struct IntPolicy {
   using slot_type = int64_t;
   using key_type = int64_t;
   using init_type = int64_t;
+  using is_flat = std::false_type;
 
   static void construct(void*, int64_t* slot, int64_t v) { *slot = v; }
   static void destroy(void*, int64_t*) {}
@@ -301,6 +302,7 @@ class StringPolicy {
 
   using key_type = std::string;
   using init_type = std::pair<std::string, std::string>;
+  using is_flat = std::false_type;
 
   template <class allocator_type, class... Args>
   static void construct(allocator_type* alloc, slot_type* slot, Args... args) {
@@ -349,7 +351,7 @@ struct StringTable
 #endif
 
 struct IntTable
-    : raw_hash_set<IntPolicy, container_internal::hash_default_hash<int64_t>,
+    : raw_hash_set<IntPolicy, priv::hash_default_hash<int64_t>,
                    std::equal_to<int64_t>, std::allocator<int64_t>> {
   using Base = typename IntTable::raw_hash_set;
   IntTable() {}
@@ -369,7 +371,7 @@ struct CustomAlloc : std::allocator<T> {
 };
 
 struct CustomAllocIntTable
-    : raw_hash_set<IntPolicy, container_internal::hash_default_hash<int64_t>,
+    : raw_hash_set<IntPolicy, priv::hash_default_hash<int64_t>,
                    std::equal_to<int64_t>, CustomAlloc<int64_t>> {
     using Base = typename CustomAllocIntTable::raw_hash_set;
     using Base::Base;	
@@ -388,40 +390,6 @@ struct BadTable : raw_hash_set<IntPolicy, BadFastHash, std::equal_to<int>,
   BadTable() {}
   using Base::Base;
 };
-
-#if PHMAP_HAVE_STD_STRING_VIEW
-TEST(Table, EmptyFunctorOptimization) {
-  static_assert(std::is_empty<std::equal_to<std::string_view>>::value, "");
-  static_assert(std::is_empty<std::allocator<int>>::value, "");
-
-  struct MockTable {
-    void* ctrl;
-    void* slots;
-    size_t size;
-    size_t capacity;
-    size_t growth_left;
-    void* infoz;
-  };
-  struct StatelessHash {
-    size_t operator()(std::string_view) const { return 0; }
-  };
-  struct StatefulHash : StatelessHash {
-    size_t dummy;
-  };
-
-  EXPECT_EQ(
-      sizeof(MockTable),
-      sizeof(
-          raw_hash_set<StringPolicy, StatelessHash,
-                       std::equal_to<std::string_view>, std::allocator<int>>));
-
-  EXPECT_EQ(
-      sizeof(MockTable) + sizeof(StatefulHash),
-      sizeof(
-          raw_hash_set<StringPolicy, StatefulHash,
-                       std::equal_to<std::string_view>, std::allocator<int>>));
-}
-#endif
 
 TEST(Table, Empty) {
   IntTable t;
@@ -445,7 +413,7 @@ TEST(Table, Prefetch) {
 
   // Do not run in debug mode, when prefetch is not implemented, or when
   // sanitizers are enabled.
-#if defined(NDEBUG) && defined(__GNUC__) && defined(__x86_64__) && \
+#if 0 && defined(NDEBUG) && defined(__GNUC__) && defined(__x86_64__) && \
     !defined(ADDRESS_SANITIZER) && !defined(MEMORY_SANITIZER) && \
     !defined(THREAD_SANITIZER) &&  !defined(UNDEFINED_BEHAVIOR_SANITIZER)&& \
     !defined(__EMSCRIPTEN__)
@@ -632,6 +600,7 @@ struct DecomposePolicy {
   using slot_type = DecomposeType;
   using key_type = DecomposeType;
   using init_type = DecomposeType;
+  using is_flat = std::false_type;
 
   template <typename T>
   static void construct(void*, DecomposeType* slot, T&& v) {
@@ -850,7 +819,7 @@ TEST(Table, EnsureNonQuadraticAsInRust) {
 
 TEST(Table, ClearBug) {
   IntTable t;
-  constexpr size_t capacity = container_internal::Group::kWidth - 1;
+  constexpr size_t capacity = priv::Group::kWidth - 1;
   constexpr size_t max_size = capacity / 2 + 1;
   for (size_t i = 0; i < max_size; ++i) {
     t.insert(i);
@@ -1112,8 +1081,7 @@ ExpectedStats XorSeedExpectedStats() {
 
   // The effective load factor is larger in non-opt mode because we insert
   // elements out of order.
-  switch (container_internal::Group::kWidth) {
-  case 8:
+  PHMAP_IF_CONSTEXPR (priv::Group::kWidth == 8) {
       if (kRandomizesInserts) {
           return {0.05,
                   1.0,
@@ -1125,8 +1093,8 @@ ExpectedStats XorSeedExpectedStats() {
                   {{0.95, 0.1}},
                   {{0.95, 0}, {0.99, 2}, {0.999, 4}, {0.9999, 10}}};
       }
-  case 16:
-  default:
+  }
+  else {
       if (kRandomizesInserts) {
           return {0.1,
                   1.0,
@@ -1217,8 +1185,7 @@ ExpectedStats LinearTransformExpectedStats() {
 
   // The effective load factor is larger in non-opt mode because we insert
   // elements out of order.
-  switch (container_internal::Group::kWidth) {
-  case 8:
+  PHMAP_IF_CONSTEXPR (priv::Group::kWidth == 8) {
       if (kRandomizesInserts) {
           return {0.1,
                   0.5,
@@ -1230,8 +1197,7 @@ ExpectedStats LinearTransformExpectedStats() {
                   {{0.95, 0.3}},
                   {{0.95, 0}, {0.99, 3}, {0.999, 15}, {0.9999, 25}}};
       }
-  case 16:
-  default:
+  } else {
       if (kRandomizesInserts) {
           return {0.1,
                   0.4,
@@ -1436,7 +1402,7 @@ TEST(Table, CopyConstructWithAlloc) {
 }
 
 struct ExplicitAllocIntTable
-    : raw_hash_set<IntPolicy, container_internal::hash_default_hash<int64_t>,
+    : raw_hash_set<IntPolicy, priv::hash_default_hash<int64_t>,
                    std::equal_to<int64_t>, Alloc<int64_t>> {
   ExplicitAllocIntTable() {}
 };
@@ -1609,11 +1575,11 @@ TEST(Table, NoThrowMoveAssign) {
 
 TEST(Table, NoThrowSwappable) {
   ASSERT_TRUE(
-      container_internal::IsNoThrowSwappable<phmap::Hash<std::string_view>>());
-  ASSERT_TRUE(container_internal::IsNoThrowSwappable<
+      priv::IsNoThrowSwappable<phmap::Hash<std::string_view>>());
+  ASSERT_TRUE(priv::IsNoThrowSwappable<
               std::equal_to<std::string_view>>());
-  ASSERT_TRUE(container_internal::IsNoThrowSwappable<std::allocator<int>>());
-  EXPECT_TRUE(container_internal::IsNoThrowSwappable<StringTable>());
+  ASSERT_TRUE(priv::IsNoThrowSwappable<std::allocator<int>>());
+  EXPECT_TRUE(priv::IsNoThrowSwappable<StringTable>());
 }
 #endif
 
@@ -1698,8 +1664,8 @@ TEST(Table, HeterogeneousLookupOverloads) {
 
   using TransparentTable = raw_hash_set<
       StringPolicy,
-      phmap::container_internal::hash_default_hash<std::string_view>,
-      phmap::container_internal::hash_default_eq<std::string_view>,
+      phmap::priv::hash_default_hash<std::string_view>,
+      phmap::priv::hash_default_eq<std::string_view>,
       std::allocator<int>>;
 
   EXPECT_TRUE((VerifyResultOf<CallFind, TransparentTable>()));
@@ -1961,5 +1927,5 @@ TEST(Sanitizer, PoisoningOnErase) {
 #endif  // ADDRESS_SANITIZER
 
 }  // namespace
-}  // namespace container_internal
+}  // namespace priv
 }  // namespace phmap

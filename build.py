@@ -78,7 +78,7 @@ def write_declare_multidict(getpy_file, key_type, value_type):
 
 
 def write_getpy_cpp(key_types, value_types):
-    with open('src/getpy_types.cpp', 'w') as getpy_file:
+    with open('src/phashmap_types.cpp', 'w') as getpy_file:
         getpy_file.write("""\
 #include "phashmap.cpp"
 
