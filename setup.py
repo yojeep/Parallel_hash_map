@@ -11,9 +11,9 @@ with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
 extra_compile_args_dict = {
-    'linux' : ['-w', '-std=c++17'],
-    'linux2' : ['-w', '-std=c++17'],
-    'darwin' : ['-w', '-std=c++17', '-stdlib=libc++','-O3','-openmp','-j64'],
+    'linux' : ['-w', '-std=c++17', '-O3', '-fopenmp'],
+    'linux2' : ['-w', '-std=c++17', '-O3', '-fopenmp'],
+    'darwin' : ['-w', '-std=c++17', '-stdlib=libc++','-O3', '-Xpreprocessor'],
     'win32' : ['/w', '/std:c++17','/Ox','/openmp','/GL','/MP','/MT'],
 
 }
