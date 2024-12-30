@@ -1,5 +1,5 @@
 [tool.cibuildwheel]
-skip = ["cp36-*",'pp*']
+skip = ["cp36-*","cp37-*",'pp*']
 
 
 #[tool.cibuildwheel.linux]
@@ -13,4 +13,4 @@ skip = ["cp36-*",'pp*']
 
 
 [project]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
