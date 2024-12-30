@@ -1,0 +1,9 @@
+# cython:language_level=3
+index = r'/'
+def make_ext(modname, pyxfilename):
+    from distutils.extension import Extension
+    return Extension(name=modname,
+                     sources=[pyxfilename],
+                     extra_link_args=[index+'openmp'],
+                     extra_compile_args=[index+'openmp','-O3','-march=native', '-ffast-math'],
+                     language='c++')
