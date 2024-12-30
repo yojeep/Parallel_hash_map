@@ -2,14 +2,14 @@
 skip = ["cp36-*",'pp*']
 
 
-[tool.cibuildwheel.linux]
-archs = ["auto64"]
-
-[tool.cibuildwheel.macos]
-archs = ["auto64"]
-
-[tool.cibuildwheel.windows]
-archs = ["auto64"]
+#[tool.cibuildwheel.linux]
+#archs = ["auto64"]
+#
+#[tool.cibuildwheel.macos]
+#archs = ["auto64"]
+#
+#[tool.cibuildwheel.windows]
+#archs = ["auto64"]
 
 
 [project]
