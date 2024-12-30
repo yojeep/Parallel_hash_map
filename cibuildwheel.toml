@@ -1,5 +1,5 @@
 [tool.cibuildwheel]
-skip = ["cp36-*","cp37-*",'pp*']
+skip = ["cp36-*",'pp*']
 
 
 #[tool.cibuildwheel.linux]
@@ -8,9 +8,13 @@ skip = ["cp36-*","cp37-*",'pp*']
 #[tool.cibuildwheel.macos]
 #archs = ["auto64"]
 #
-#[tool.cibuildwheel.windows]
-#archs = ["auto64"]
+[tool.cibuildwheel.windows]
+archs = ["auto64"]
+
 
 
 [project]
-requires-python = ">=3.8"
+requires-python = ">=3.7"
+
+#cibuildwheel --config-file cibuildwheel.toml
+#cibuildwheel --config-file cibuildwheel.toml --platform linux
