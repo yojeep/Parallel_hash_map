@@ -5,13 +5,13 @@ import sys
 import setuptools
 import glob
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
 extra_compile_args_dict = {
-    'linux' : ['-w', '-std=c++17', '-O3', '-fopenmp'],
+    'linux' : ['-w', '-std=c++17', '-Os','-fopenmp'],
     'linux2' : ['-w', '-std=c++17', '-O3', '-fopenmp'],
     'darwin' : ['-w', '-std=c++17', '-stdlib=libc++','-O3'],
     'win32' : ['/w', '/std:c++17','/Ox','/openmp','/GL','/MP','/MT'],
