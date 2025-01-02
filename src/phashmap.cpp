@@ -1,6 +1,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <omp.h>
+#include <cstdint>
 namespace py = pybind11;
 
 #include <parallel_hashmap/phmap.h>
@@ -39,13 +41,14 @@ struct Dict {
     Dict ( py::array_t<Value> default_value ) : default_value ( ( (Value *) default_value.request().ptr )[0] ) {}
 
 
-    py::array_t<Value> __getitem__ ( py::array_t<Key> & key_array ) {
+    py::array_t<Value> __getitem__ ( py::array_t<Key> & key_array, int64_t num_threads=1) {
         auto * key_array_ptr = (Key *) key_array.request().ptr;
 
         auto result_array = py::array_t<Value> ( key_array.request().shape );
         auto * result_array_ptr = (Value *) result_array.request().ptr;
-
-        for ( size_t idx = 0; idx < key_array.size(); idx++ ) {
+        omp_set_num_threads(num_threads);
+        #pragma omp parallel for
+        for ( int64_t idx = 0; idx < key_array.size(); idx++ ) {
             auto search = dict.find( key_array_ptr[idx] );
 
             if ( search != dict.end() ) {
@@ -166,13 +169,15 @@ struct Dict {
     }
 
 
-    py::array_t<bool> contains ( py::array_t<Key> & key_array ) {
+    py::array_t<bool> contains ( py::array_t<Key> & key_array, int64_t num_threads=1) {
         auto * key_array_ptr = (Key *) key_array.request().ptr;
 
         auto result_array = py::array_t<bool>( key_array.request().shape );
         auto * result_array_ptr = (bool *) result_array.request().ptr;
 
-        for ( size_t idx = 0; idx < key_array.size(); idx++ ) {
+        omp_set_num_threads(num_threads);
+        #pragma omp parallel for
+        for ( int64_t idx = 0; idx < key_array.size(); idx++ ) {
             auto search = dict.find( key_array_ptr[idx] );
 
             if ( search != dict.end() ) {
@@ -308,13 +313,14 @@ struct Set {
     }
 
 
-    py::array_t<bool> contains ( py::array_t<Key> & key_array ) {
+    py::array_t<bool> contains ( py::array_t<Key> & key_array ,int64_t num_threads=1) {
         auto * key_array_ptr = (Key *) key_array.request().ptr;
 
         auto result_array = py::array_t<bool>( key_array.request().shape );
         auto * result_array_ptr = (bool *) result_array.request().ptr;
-
-        for ( size_t idx = 0; idx < key_array.size(); idx++ ) {
+        omp_set_num_threads(num_threads);
+        #pragma omp parallel for
+        for ( int64_t idx = 0; idx < key_array.size(); idx++ ) {
             auto search = set.find( key_array_ptr[idx] );
 
             if ( search != set.end() ) {
@@ -389,12 +395,13 @@ struct MultiDict {
     MultiDict () {}
 
 
-    std::vector<py::array_t<Value>> __getitem__ ( py::array_t<Key> & key_array ) {
+    std::vector<py::array_t<Value>> __getitem__ ( py::array_t<Key> & key_array, int64_t num_threads=1 ) {
         auto * key_array_ptr = (Key *) key_array.request().ptr;
 
         std::vector<py::array_t<Value>> result_list;
-
-        for ( size_t idx = 0; idx < key_array.size(); idx++ ) {
+        omp_set_num_threads(num_threads);
+        #pragma omp parallel for
+        for ( int64_t idx = 0; idx < key_array.size(); idx++ ) {
             auto search = dict.find( key_array_ptr[idx] );
 
             phmap::flat_hash_set<Value> result;
@@ -452,13 +459,14 @@ struct MultiDict {
     }
 
 
-    py::array_t<bool> contains ( py::array_t<Key> & key_array ) {
+    py::array_t<bool> contains ( py::array_t<Key> & key_array ,int64_t num_threads=1) {
         auto * key_array_ptr = (Key *) key_array.request().ptr;
 
         auto result_array = py::array_t<bool>( key_array.request().shape );
         auto * result_array_ptr = (bool *) result_array.request().ptr;
-
-        for ( size_t idx = 0; idx < key_array.size(); idx++ ) {
+        omp_set_num_threads(num_threads);
+        #pragma omp parallel for
+        for ( int64_t idx = 0; idx < key_array.size(); idx++ ) {
             auto search = dict.find( key_array_ptr[idx] );
 
             if ( search != dict.end() ) {

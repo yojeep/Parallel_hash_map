@@ -3,13 +3,14 @@ from collections.abc import MutableMapping, MutableSet
 from .phashmap_types import dict_types
 from .phashmap_types import set_types
 from .phashmap_types import multidict_types
-
+import numpy as np
 
 class Dict(MutableMapping):
-    def __init__(self, key_type, value_type, default_value=None, filename=None, safe_mode=False):
+    def __init__(self, key_type, value_type, default_value=None, filename=None, safe_mode=False,threads=1):
         self.__key_type = key_type
         self.__value_type = value_type
         self.__dict_type = dict_types[(key_type, value_type)]
+        self.__threads = threads
 
         if default_value is None:
             self.__dict = self.__dict_type()
@@ -28,7 +29,7 @@ class Dict(MutableMapping):
 
     def __getitem__(self, key):
         if self.__safe_mode: assert key.dtype == self.__key_type, (key.dtype,)
-        return self.__dict.__getitem__(key)
+        return self.__dict.__getitem__(key,int(self.__threads))
 
 
     def __setitem__(self, key, value):
@@ -61,9 +62,10 @@ class Dict(MutableMapping):
         return self.__dict.__delitem__(key)
 
 
-    def contains(self, key):
+    def contains(self, key,threads=None):
+        threads = threads if threads is not None else self.__threads
         if self.__safe_mode: assert key.dtype == self.__key_type, (key.dtype,)
-        return self.__dict.contains(key)
+        return self.__dict.contains(key,int(threads))
     __contains__ = contains
 
 
@@ -112,15 +114,13 @@ class Dict(MutableMapping):
 
 
 class Set(MutableSet):
-    def __init__(self, key_type, filename=None, safe_mode=False):
+    def __init__(self, key_type, filename=None, safe_mode=False,threads=1):
         self.__key_type = key_type
         self.__set_type = set_types[key_type]
-
+        self.__threads = threads
         self.__set = self.__set_type()
-
         if filename is not None:
             self.__set.load(filename)
-
         self.__safe_mode = safe_mode
 
 
@@ -138,9 +138,10 @@ class Set(MutableSet):
         return self.__set.discard(key)
 
 
-    def contains(self, key):
+    def contains(self, key,threads=None):
+        threads = threads if threads is not None else self.__threads
         if self.__safe_mode: assert key.dtype == self.__key_type, (key.dtype,)
-        return self.__set.contains(key)
+        return self.__set.contains(key,int(threads))
     __contains__ = contains
 
 
@@ -176,10 +177,11 @@ class Set(MutableSet):
 
 
 class MultiDict(MutableMapping):
-    def __init__(self, key_type, value_type, default_value=None, filename=None, safe_mode=False):
+    def __init__(self, key_type, value_type, default_value=None, filename=None, safe_mode=False,threads=1):
         self.__key_type = key_type
         self.__value_type = value_type
         self.__dict_type = multidict_types[(key_type, value_type)]
+        self.__threads = threads
 
         if default_value is None:
             self.__dict = self.__dict_type()
@@ -198,7 +200,7 @@ class MultiDict(MutableMapping):
 
     def __getitem__(self, key):
         if self.__safe_mode: assert key.dtype == self.__key_type, (key.dtype,)
-        return self.__dict.__getitem__(key)
+        return self.__dict.__getitem__(key,int(self.__threads))
 
 
     def __setitem__(self, key, value):
@@ -211,9 +213,10 @@ class MultiDict(MutableMapping):
         return self.__dict.__delitem__(key)
 
 
-    def contains(self, key):
+    def contains(self, key,threads=None):
+        threads = threads if threads is not None else self.__threads
         if self.__safe_mode: assert key.dtype == self.__key_type, (key.dtype,)
-        return self.__dict.contains(key)
+        return self.__dict.contains(key,int(threads))
     __contains__ = contains
 
 
